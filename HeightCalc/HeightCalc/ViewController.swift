@@ -9,14 +9,37 @@ import UIKit
 
 class ViewController: UIViewController {
     
-    var supportitems: Set = [
-        Item(id: 0, name: "2575", height: 16),
-        Item(id:1, name:"babies flat", minheight:20, maxheight:36),
-        Item(id:2, name:"babies with rollers", minheight:24, maxheight:40),
-        Item(id:3, name:"standards flat", )
+    var appleboxes: Array = [
+        Item(name: "full apple #3", height: 20),
+        Item(name: "full apple #2", height: 12),
+        Item(name: "full apple #1", height: 8),
+        Item(name: "half-apple", height: 4),
+        Item(name: "quarter-apple", height: 2),
+        Item(name: "pancake", height: 1)
     ]
     
-
+    var supportitems: Array = [
+        Item(name:"rolling spreaders", height: 4, combineswith: ["babies", "standards"], accessory: true, canuseboxes: false),
+        Item(name:"babies", minheight:20, maxheight:36, combineswith: ["rolling spreaders"]),
+        Item(name:"standards", minheight:36, maxheight:66, combineswith: ["rolling spreaders"]),
+        Item(name:"hi-hat", height: 6),
+        Item(name:"lo-hat", height: 3),
+        Item(name:"Fischer 11 standard head", minheight: 14, maxheight: 51, canuseboxes: false),
+        Item(name:"Fischer 11 low head", minheight: 3, maxheight:39, canuseboxes: false)
+    ]
+    
+    var aksitems: Array = [
+        Item(name:"none"),
+        Item(name:"stormtrooper slider", height:6, heightonboxes: 4),
+        Item(name:"8-ball slider", height:6, heightonboxes: 4)
+    ]
+    
+    var heads: Array = [
+        Item(name:"2575", height: 16),
+        Item(name:"Arrihead", height: 22)
+    ]
+    
+/*
     // sticks heights are floor to mitchell on flat spreaders
     let babies = [20, 36]
     let standards = [36, 66]
@@ -27,53 +50,84 @@ class ViewController: UIViewController {
     
     let sliderfrommitchell = 6
     let sliderfrombase = 4
-    var usingslider = false
+    var usingslider = false*/
     
     var goalheight = 0
     var outputtext = ""
+    var currenthead = "2575"
+    var currentconfig : Array<String> = []
     
     @IBOutlet weak var outputLabel: UILabel!
     @IBOutlet weak var inputField: UITextField!
     @IBOutlet weak var heightRef: UILabel!
+    @IBOutlet weak var headMenuButton: UIButton!
+    @IBOutlet weak var aksMenuButton: UIButton!
     
     override func viewDidLoad() {
         super.viewDidLoad()
-        // Do any additional setup after loading the view.
+        
+        configureMenuActions()
     }
     
-    @IBAction func sliderSwitch(_ sender: UISwitch) {
-        usingslider = sender.isOn
+    func configureMenuActions() {
+        headMenuButton.menu = headMenu
+        headMenuButton.showsMenuAsPrimaryAction = true
+        aksMenuButton.menu = aksMenu
+        aksMenuButton.showsMenuAsPrimaryAction = true
+        
     }
+    
+    var headmenuitems: [UIAction] {
+        var output : Array<UIAction> = []
+        for head in heads {
+            output.append(UIAction(title: head.name, handler: {
+                (action) in self.currenthead = head.name
+                print("current head is " + head.name)}))
+        }
+        
+        return output
+    }
+    
+    var headMenu: UIMenu {
+        return UIMenu(title: "foo", options: [], children: headmenuitems)
+    }
+
+    var aksmenuitems: [UIAction] {
+        var output : Array<UIAction> = []
+        for aksitem in aksitems {
+            output.append(UIAction(title: aksitem.name, handler: {
+                (action) in
+                self.currentconfig.removeAll() //TODO manage more than one
+                self.currentconfig.append(aksitem.name)
+            }))
+        }
+        
+        return output
+    }
+    
+    var aksMenu: UIMenu {
+        return UIMenu(title: "foo", options: [], children: aksmenuitems)
+    }
+
+    
+    
     func appleboxCalc(height: Int) -> String {
         var remainingheight = height;
-        let number3: Int  = remainingheight / 20
-        remainingheight -= number3 * 20
-        let number2: Int = remainingheight / 12
-        remainingheight -= number2 * 12
-        let number1: Int = remainingheight / 8
-        remainingheight -= number1 * 8
-        let halves: Int = remainingheight / 4
-        remainingheight -= halves * 4
-        let quarters: Int = remainingheight / 2
-        remainingheight -= quarters * 2
-        var output = "";
-        if (number3 != 0) {
-            output += String(number3) + " applebox #3\n"
-        }
-        if (number2 != 0) {
-            output += String(number2) + " applebox #2\n"
-        }
-        if (number1 != 0) {
-            output += String(number1) + " applebox #1\n"
-        }
-        if (halves != 0) {
-            output += String(halves) + " half-apple\n"
-        }
-        if (quarters != 0) {
-            output += String(quarters) + " quarter-apple\n"
-        }
-        if (remainingheight != 0) {
-            output += "1 pancake\n"
+        var output = ""
+        var firstentry = true;
+        
+        for box in appleboxes {
+            let numberof: Int = remainingheight / box.height
+            if (numberof > 0) {
+                remainingheight -= numberof * box.height
+                var comma = ""
+                if (!firstentry) {
+                    comma = ", "
+                } else {
+                    firstentry = false
+                }
+                output += comma + String(numberof) + "x " + box.name
+            }
         }
         
         return output
@@ -86,11 +140,40 @@ class ViewController: UIViewController {
         goalheight = Int(text) ?? 0
         print("\nnew height is " + String(goalheight))
         outputtext = ""
+        
+        var mitchelltolens = 0
+        let headindex = heads.firstIndex(where: {$0.name == currenthead})
+        if (headindex != nil) {
+            mitchelltolens = heads[headindex ?? 0].height
+        } else {
+            print ("current config specifies a head (" + currenthead + ") that is not an available option")
+        }
+        
+        let goalsupportheight = goalheight - mitchelltolens
+        
+        heightRef.text = "(" + String(goalsupportheight) + " inches to camera mitchell mount)"
+        
+        print("goalsupportheight is " + String(goalsupportheight))
+        
+        
+        for supportitem in supportitems {
+            if (supportitem.accessory) { continue }
+            if ((goalsupportheight >= supportitem.height && supportitem.minheight == 0) || (goalsupportheight >= supportitem.minheight && (goalsupportheight <= supportitem.maxheight || (goalsupportheight > supportitem.maxheight && supportitem.canuseboxes)))) {
+                
+                var appleboxadditions = " "
+                if (supportitem.canuseboxes && goalsupportheight > supportitem.maxheight) {
+                    // only use boxes when we have exceeded the maximum height of given support
+                    appleboxadditions += "+ " + appleboxCalc(height: goalsupportheight - supportitem.heightonboxes)
+                }
+                outputtext += supportitem.name + appleboxadditions + "\n"
+            }
+        }
+        
+        /*
         let goalmitchell = goalheight - mitchelltolens // ground to mitchell mount
         let goalsliderbase = goalmitchell - sliderfrombase // ground to slider base (for applebox use)
         let goalslidermitchell = goalmitchell - sliderfrommitchell // ground to slider mitchell (for sticks use)
         var goal = goalmitchell // assume that we want to calculate from ground to head mitchell (no slider)
-        heightRef.text = "(" + String(goalmitchell) + " inches to camera mitchell mount)"
         
         var stickscutoff = babies[0]; // the minimum height for sticks use, assuming no slider
         if (usingslider) {
@@ -102,7 +185,6 @@ class ViewController: UIViewController {
             }
         }
         print("stickscutoff is " + String(stickscutoff))
-        print("goalmitchell is " + String(goalmitchell))
         print("goalsliderbase is " + String(goalsliderbase))
         print("goalslidermitchell is " + String(goalslidermitchell))
         print("goal is " + String(goal))
@@ -157,7 +239,7 @@ class ViewController: UIViewController {
                     }
                 }
             }
-        }
+        }*/
         
         outputLabel.text = outputtext
     }
@@ -165,29 +247,28 @@ class ViewController: UIViewController {
 }
 
 
-class Item: Equatable, Hashable {
+class Item {
     static func == (lhs: Item, rhs: Item) -> Bool {
         return lhs.name == rhs.name
     }
     
-    var id: Int
     var name: String
     var height: Int
+    var heightonboxes: Int // sliders have a different height when used with boxes than they do on a mitchell mount
     var minheight: Int
     var maxheight: Int
+    var combineswith: Set<String>
+    var accessory: Bool // ie rolling spreaders, which can only be used with another support item
+    var canuseboxes: Bool // dollies cannot go on boxes
     
-    init(id: Int, name: String, height: Int? = 0, minheight: Int? = 0, maxheight: Int? = 0) {
-        self.id = id
+    init(name: String, height: Int? = 0, heightonboxes: Int? = nil, minheight: Int? = nil, maxheight: Int? = nil, combineswith: Set<String>? = nil, accessory: Bool? = false, canuseboxes: Bool? = true) {
         self.name = name
-        self.height = height
-        self.minheight = minheight
-        self.maxheight = maxheight
-    }
-    
-    
-    var hashValue: Int {
-        get {
-            return id.hashValue << 15 + name.hashValue
-        }
+        self.height = height ?? 0
+        self.minheight = minheight ?? self.height
+        self.maxheight = maxheight ?? self.height
+        self.heightonboxes = heightonboxes ?? self.maxheight
+        self.combineswith = combineswith ?? []
+        self.accessory = accessory ?? false
+        self.canuseboxes = canuseboxes ?? true
     }
 }
