@@ -19,6 +19,7 @@ class ViewController: UIViewController {
     ]
     
     var supportitems: Array = [
+        Item(name: "", height: 0),
         Item(name:"rolling spreaders", height: 4, combineswith: ["babies", "standards"], accessory: true, canuseboxes: false),
         Item(name:"babies", minheight:20, maxheight:36, combineswith: ["rolling spreaders"]),
         Item(name:"standards", minheight:36, maxheight:66, combineswith: ["rolling spreaders"]),
@@ -74,7 +75,6 @@ class ViewController: UIViewController {
         headMenuButton.showsMenuAsPrimaryAction = true
         aksMenuButton.menu = aksMenu
         aksMenuButton.showsMenuAsPrimaryAction = true
-        
     }
     
     var headmenuitems: [UIAction] {
@@ -89,7 +89,7 @@ class ViewController: UIViewController {
     }
     
     var headMenu: UIMenu {
-        return UIMenu(title: "foo", options: [], children: headmenuitems)
+        return UIMenu(title: "Current Head", options: [], children: headmenuitems)
     }
 
     var aksmenuitems: [UIAction] {
@@ -98,7 +98,9 @@ class ViewController: UIViewController {
             output.append(UIAction(title: aksitem.name, handler: {
                 (action) in
                 self.currentconfig.removeAll() //TODO manage more than one
-                self.currentconfig.append(aksitem.name)
+                if (aksitem.name != "none") {
+                    self.currentconfig.append(aksitem.name)
+                }
             }))
         }
         
@@ -106,7 +108,7 @@ class ViewController: UIViewController {
     }
     
     var aksMenu: UIMenu {
-        return UIMenu(title: "foo", options: [], children: aksmenuitems)
+        return UIMenu(title: "Camera AKS", options: [], children: aksmenuitems)
     }
 
     
@@ -149,24 +151,73 @@ class ViewController: UIViewController {
             print ("current config specifies a head (" + currenthead + ") that is not an available option")
         }
         
-        let goalsupportheight = goalheight - mitchelltolens
         
-        heightRef.text = "(" + String(goalsupportheight) + " inches to camera mitchell mount)"
+        
+        var goalsupportheight = goalheight - mitchelltolens
+        
+        heightRef.text = "(" + String(goalsupportheight) + " inches to primary mitchell mount)"
         
         print("goalsupportheight is " + String(goalsupportheight))
         
+        var aksheight = 0
         
         for supportitem in supportitems {
-            if (supportitem.accessory) { continue }
+            
+            aksheight = 0
+            
+            if (supportitem.accessory) {
+                // only use accessories in conjunction with other support items
+                continue
+                
+            }
+            
+            
+            if (supportitem.name == "" && currentconfig.count == 0) {
+                // only use the null (boxes-only) support option when a slider is in use
+                continue
+            } else if (supportitem.name == "" && currentconfig.count > 0){
+                // calculate slider height when using sliders on boxes
+                print("calculating aks height from boxes")
+                for i in 0..<currentconfig.count {
+                    let aksindex = aksitems.firstIndex(where: {$0.name == currentconfig[i]})
+                    if (aksindex != nil) {
+                        aksheight = aksitems[aksindex ?? 0].heightonboxes
+                    } else {
+                        print ("current config specifies aks that is not available")
+                    }
+                }
+            } else {
+                // calculate slider height when using sliders on non-box support
+                
+                print("calculating aks height from sticks")
+                for i in 0..<currentconfig.count {
+                    let aksindex = aksitems.firstIndex(where: {$0.name == currentconfig[i]})
+                    if (aksindex != nil) {
+                        aksheight = aksitems[aksindex ?? 0].height
+                    } else {
+                        print ("current config specifies aks that is not available")
+                    }
+                }
+            }
+            
+            goalsupportheight -= aksheight
+            print ("goalsupportheight after aks is " + String(goalsupportheight))
+            
+            
             if ((goalsupportheight >= supportitem.height && supportitem.minheight == 0) || (goalsupportheight >= supportitem.minheight && (goalsupportheight <= supportitem.maxheight || (goalsupportheight > supportitem.maxheight && supportitem.canuseboxes)))) {
                 
                 var appleboxadditions = " "
                 if (supportitem.canuseboxes && goalsupportheight > supportitem.maxheight) {
-                    // only use boxes when we have exceeded the maximum height of given support
-                    appleboxadditions += "+ " + appleboxCalc(height: goalsupportheight - supportitem.heightonboxes)
+                    // only use boxes when we have exceeded the maximum height of a given support
+                    if (supportitem.name != "") {
+                        appleboxadditions += "+ "
+                    }
+                    appleboxadditions += appleboxCalc(height: goalsupportheight - supportitem.heightonboxes)
                 }
                 outputtext += supportitem.name + appleboxadditions + "\n"
             }
+            
+            goalsupportheight += aksheight
         }
         
         /*
