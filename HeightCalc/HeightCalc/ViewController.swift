@@ -32,7 +32,8 @@ class ViewController: UIViewController {
     var aksitems: Array = [
         Item(name:"none"),
         Item(name:"stormtrooper slider", height:6, heightonboxes: 4),
-        Item(name:"8-ball slider", height:6, heightonboxes: 4)
+        Item(name:"8-ball slider", height:6, heightonboxes: 4),
+        Item(name:"tango", height:2, canuseboxes:false)
     ]
     
     var heads: Array = [
@@ -159,7 +160,7 @@ class ViewController: UIViewController {
         
         print("goalsupportheight is " + String(goalsupportheight))
         
-        var aksheight = 0
+        var aksheight : Int
         
         for supportitem in supportitems {
             
@@ -171,33 +172,34 @@ class ViewController: UIViewController {
                 
             }
             
-            
             if (supportitem.name == "" && currentconfig.count == 0) {
                 // only use the null (boxes-only) support option when a slider is in use
                 continue
-            } else if (supportitem.name == "" && currentconfig.count > 0){
-                // calculate slider height when using sliders on boxes
-                print("calculating aks height from boxes")
-                for i in 0..<currentconfig.count {
-                    let aksindex = aksitems.firstIndex(where: {$0.name == currentconfig[i]})
-                    if (aksindex != nil) {
-                        aksheight = aksitems[aksindex ?? 0].heightonboxes
+            }
+            
+            var justboxesokay = false
+            
+            for i in 0..<currentconfig.count {
+                // configuration of aks is a *different height* depending on the support method, hence we have to recalculate this for every support method. TODO perhaps break support up into mitchell & non-mitchell to only have to calculate this twice?
+                let aksindex = aksitems.firstIndex(where: {$0.name == currentconfig[i]})
+                if (aksindex != nil) {
+                    if (supportitem.name == "") {
+                        if (aksitems[aksindex ?? 0].canuseboxes) {
+                            // flag that one of our support items can use boxes alone as support (ie a slider)
+                            justboxesokay = true
+                        }
+                        aksheight += aksitems[aksindex ?? 0].heightonboxes
                     } else {
-                        print ("current config specifies aks that is not available")
+                        aksheight += aksitems[aksindex ?? 0].height
                     }
+                } else {
+                    print ("current config specifies aks that is not available")
                 }
-            } else {
-                // calculate slider height when using sliders on non-box support
-                
-                print("calculating aks height from sticks")
-                for i in 0..<currentconfig.count {
-                    let aksindex = aksitems.firstIndex(where: {$0.name == currentconfig[i]})
-                    if (aksindex != nil) {
-                        aksheight = aksitems[aksindex ?? 0].height
-                    } else {
-                        print ("current config specifies aks that is not available")
-                    }
-                }
+            }
+            
+            if (supportitem.name == "" && !justboxesokay) {
+                // no support items were found that can use only boxes as support, moving on...
+                continue
             }
             
             goalsupportheight -= aksheight
