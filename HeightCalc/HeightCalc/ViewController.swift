@@ -20,8 +20,8 @@ class ViewController: UIViewController {
     
     var supportitems: Array = [
         Item(name: "", height: 0),
-        Item(name:"babies", minheight:20, maxheight:36, combineswith: ["rolling spreaders"]),
-        Item(name:"standards", minheight:36, maxheight:66, combineswith: ["rolling spreaders"]),
+        Item(name:"babies", minheight:20, maxheight:36, canuserollers: true),
+        Item(name:"standards", minheight:36, maxheight:66, canuserollers:true),
         Item(name:"hi-hat", height: 6),
         Item(name:"lo-hat", height: 3),
         Item(name:"Fischer 11 standard head", minheight: 14, maxheight: 51, combineswith: ["18-inch riser", "6-inch riser"], canuseboxes: false),
@@ -39,8 +39,7 @@ class ViewController: UIViewController {
         Item(name:"stormtrooper slider", height:6, heightonboxes: 4),
         Item(name:"8-ball slider", height:6, heightonboxes: 4),
         Item(name:"tango", height:2, canuseboxes:false),
-        Item(name:"R-O", height:5, canuseboxes: false),
-        Item(name:"rolling spreaders", height: 4, canuseboxes: false)
+        Item(name:"R-O", height:5, canuseboxes: false)
         ]
     
     var heads: Array = [
@@ -48,11 +47,12 @@ class ViewController: UIViewController {
         Item(name:"Arrihead", height: 22)
         ]
     
+    var rollerheight = 4
+    
     var goalheight = 0
     var outputtext = ""
     var currenthead = "2575"
     var currentconfig : Array<String> = []
-    var preferrollers = true
     
     @IBOutlet weak var outputLabel: UILabel!
     @IBOutlet weak var inputField: UITextField!
@@ -205,6 +205,14 @@ class ViewController: UIViewController {
             
             goalsupportheight -= aksheight
             
+            if (supportitem.canuserollers) {
+                print("this support can use rolling spreaders")
+                let checkoutput = checkSupport(height: goalsupportheight - rollerheight, support: supportitem, useboxes: false)
+                if (checkoutput != "") {
+                    outputtext += "rollers + " + checkoutput
+                }
+            }
+            
             outputtext += checkSupport(height: goalsupportheight, support: supportitem);
             
             goalsupportheight += aksheight // reset the goal height for the next support item (in case support aks is a different height)
@@ -216,10 +224,11 @@ class ViewController: UIViewController {
     
     
     
-    func checkSupport (height: Int, support: Item, startingindex: Int? = 0) -> String {
+    func checkSupport (height: Int, support: Item, useboxes: Bool? = true) -> String {
+        print("checking support: " + support.name + " for height " + String(height))
         var output = support.name
         var appleboxadditions = ""
-        var boxesokay = true
+        var boxesokay = useboxes ?? true
         
         /*
          EITHER:
@@ -241,14 +250,14 @@ class ViewController: UIViewController {
          
          */
         
-        if ((height >= support.height && support.minheight == 0) || (height >= support.minheight && (height <= support.maxheight || (height > support.maxheight && support.canuseboxes)))) {
+        if ((height >= support.height && support.minheight == 0) || (height >= support.minheight && (height <= support.maxheight || (height > support.maxheight && support.canuseboxes && boxesokay)))) {
             
-            print("height is greater than this support's minimum, and either less than its maximum or greater than its maximum but can combine")
+            print("height is greater than this support's minimum, and either less than its maximum or greater than its maximum but can use boxes")
             
             if (height > support.maxheight) {
                 print("height is greater than this support's maximum")
                 
-               /* TODO - support combinations (risers)
+               /* //TODO - support combinations (risers)
                 if (support.combineswith.count > 0) {
                     print("support can combine")
                     for i in (startingindex ?? 0)..<support.combineswith.count {
@@ -281,7 +290,11 @@ class ViewController: UIViewController {
                         return ""
                     }
                     appleboxadditions += appleboxstring
+                } else {
+                    print ("height is greater than maximum, and we can't use boxes in the current config")
+                    return ""
                 }
+                
             } else {
                 print ("height is less than this support's maximum")
             }
@@ -289,7 +302,7 @@ class ViewController: UIViewController {
             output += appleboxadditions + "\n"
             return output
         }
-        
+        print ("out of range.")
         return ""
     }
     
@@ -308,8 +321,9 @@ class Item {
     var maxheight: Int
     var combineswith: Array<String>
     var canuseboxes: Bool // dollies cannot go on boxes
+    var canuserollers: Bool
     
-    init(name: String, height: Int? = 0, heightonboxes: Int? = nil, minheight: Int? = nil, maxheight: Int? = nil, combineswith: Array<String>? = nil, canuseboxes: Bool? = true) {
+    init(name: String, height: Int? = 0, heightonboxes: Int? = nil, minheight: Int? = nil, maxheight: Int? = nil, combineswith: Array<String>? = nil, canuseboxes: Bool? = true, canuserollers: Bool? = false) {
         self.name = name
         self.height = height ?? 0
         self.minheight = minheight ?? self.height
@@ -317,5 +331,6 @@ class Item {
         self.heightonboxes = heightonboxes ?? self.maxheight
         self.combineswith = combineswith ?? []
         self.canuseboxes = canuseboxes ?? true
+        self.canuserollers = canuserollers ?? false
     }
 }
