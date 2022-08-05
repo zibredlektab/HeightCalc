@@ -45,8 +45,8 @@
                                 <nil key="textColor"/>
                                 <nil key="highlightedColor"/>
                             </label>
-                            <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" fixedFrame="YES" text="AKS:" textAlignment="right" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="Zra-kD-ZXZ">
-                                <rect key="frame" x="98" y="117" width="37" height="21"/>
+                            <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" fixedFrame="YES" text="Support AKS:" textAlignment="right" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="Zra-kD-ZXZ">
+                                <rect key="frame" x="32" y="117" width="103" height="21"/>
                                 <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
                                 <fontDescription key="fontDescription" type="system" pointSize="17"/>
                                 <nil key="textColor"/>
@@ -85,7 +85,7 @@
                     </view>
                     <splitViewMasterSimulatedSizeMetrics key="simulatedDestinationMetrics"/>
                     <connections>
-                        <outlet property="aksMenuButton" destination="v9O-Jk-Nfx" id="IPk-Pj-qpW"/>
+                        <outlet property="aksMenuButton" destination="v9O-Jk-Nfx" id="xVo-oi-7o7"/>
                         <outlet property="headMenuButton" destination="vh8-UO-Y9z" id="I3d-Tn-lOJ"/>
                         <outlet property="heightRef" destination="tGE-Fj-bSR" id="uoe-q8-dNV"/>
                         <outlet property="inputField" destination="rTm-aH-9wr" id="d5d-Vj-lv5"/>
