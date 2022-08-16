@@ -7,8 +7,29 @@
 
 import UIKit
 
+protocol ItemConfigDelegate: AnyObject {
+    func getCurHead() -> String;
+    func getSupportItems() -> Array<Item>;
+}
+
 class ViewController: UIViewController {
     
+    
+    override func prepare(for segue: UIStoryboardSegue, sender: Any?) {
+        let destinationViewController = segue.destination
+        if let configController = destinationViewController as? ConfigureViewController {
+            configController.delegate = self
+        }
+    }
+    
+    
+    @IBAction func actionAddDetail(_ sender: UIButton) {
+       guard  let configView = self.storyboard?.instantiateViewController(withIdentifier: "ConfigureViewController") as? ConfigureViewController else {
+           fatalError("View Controller not found")}
+        configView.delegate = self //Protocol conformation here
+        navigationController?.pushViewController(configView, animated: true)
+    }
+
     var appleboxes: Array = [
         Item(name: "full apple #3", height: 20),
         Item(name: "full apple #2", height: 12),
@@ -332,5 +353,15 @@ class Item {
         self.combineswith = combineswith ?? []
         self.canuseboxes = canuseboxes ?? true
         self.canuserollers = canuserollers ?? false
+    }
+}
+
+extension ViewController: ItemConfigDelegate {
+    func getCurHead() -> String {
+        return currenthead
+    }
+    
+    func getSupportItems() -> Array<Item> {
+        return supportitems
     }
 }
